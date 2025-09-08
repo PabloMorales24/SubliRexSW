@@ -1,0 +1,39 @@
+<%- include('../partials/header') %>
+<section class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">Compra #<%= compra.id %></h2>
+    <a class="btn btn-warning" href="/compras-productos/<%= compra.id %>/editar"><i class="fa fa-edit"></i> Editar</a>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-3"><strong>Proveedor:</strong> <%= compra.proveedor_nombre %></div>
+    <div class="col-md-3"><strong>Bodega:</strong> <%= compra.bodega_nombre %></div>
+    <div class="col-md-3"><strong>Fecha:</strong> <%= compra.fecha_formateada %></div>
+    <div class="col-md-3"><strong>Total:</strong> Q <%= Number(compra.total).toFixed(2) %></div>
+    <div class="col-md-6"><strong>Creado por:</strong> <%= compra.creador_username %> — <%= compra.created_at %></div>
+    <div class="col-md-6"><strong>Modificado por:</strong> <%= compra.modificador_username || '-' %> — <%= compra.updated_at %></div>
+    <div class="col-12"><strong>Notas:</strong> <%= compra.notas || '-' %></div>
+  </div>
+
+  <hr>
+  <h5>Detalle</h5>
+  <div class="table-responsive">
+    <table class="table table-sm">
+      <thead class="table-light">
+        <tr><th>Producto</th><th class="text-end">Cant.</th><th class="text-end">P. Unit</th><th class="text-end">Subtotal</th></tr>
+      </thead>
+      <tbody>
+        <% detalles.forEach(d=>{ %>
+          <tr>
+            <td><%= d.producto_nombre %></td>
+            <td class="text-end"><%= Number(d.cantidad).toFixed(2) %></td>
+            <td class="text-end">Q <%= Number(d.precio_unitario).toFixed(2) %></td>
+            <td class="text-end">Q <%= Number(d.subtotal).toFixed(2) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <a class="btn btn-secondary" href="/compras-productos">Volver</a>
+</section>

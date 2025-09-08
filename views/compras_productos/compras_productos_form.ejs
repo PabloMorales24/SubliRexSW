@@ -1,0 +1,152 @@
+<%- include('../partials/header') %>
+<section class="container py-4">
+  <h2 class="h4 mb-3"><%= compra ? 'Editar compra #'+compra.id : 'Nueva compra' %></h2>
+
+  <form method="post" action="<%= compra ? '/compras-productos/'+compra.id : '/compras-productos' %>">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Proveedor</label>
+        <select name="proveedor_id" class="form-select" required>
+          <option value="" disabled <%= !compra ? 'selected':'' %> >Seleccione...</option>
+          <% proveedores.forEach(p=>{ %>
+            <option value="<%= p.id %>" <%= compra && compra.proveedor_id===p.id ? 'selected':'' %>><%= p.nombre %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Bodega destino</label>
+        <select name="bodega_id" class="form-select" required>
+          <% bodegas.forEach(b=>{ %>
+            <option value="<%= b.id %>" <%= compra && compra.bodega_id===b.id ? 'selected':'' %>><%= b.nombre %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Fecha y hora</label>
+        <input type="datetime-local" name="fecha_compra" class="form-control" required
+               value="<%= compra ? compra.fecha_compra_local : '' %>">
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Notas</label>
+        <input type="text" name="notas" class="form-control" value="<%= compra ? (compra.notas||'') : '' %>">
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h5 class="mb-0">Productos</h5>
+      <button type="button" class="btn btn-sm btn-outline-success" id="btnAdd"><i class="fa fa-plus"></i> Agregar</button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle" id="tblDetalles">
+        <thead class="table-light">
+          <tr>
+            <th style="width:35%">Producto</th>
+            <th style="width:15%">Cantidad</th>
+            <th style="width:20%">Precio unitario</th>
+            <th class="text-end" style="width:20%">Subtotal</th>
+            <th style="width:10%"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% const filas = compra ? detalles : []; %>
+          <% (filas.length?filas:[{producto_id:'',cantidad:'',precio_unitario:''}]).forEach((d,i)=>{ %>
+            <tr>
+              <td>
+                <select name="items[<%= i %>][producto_id]" class="form-select producto" required>
+                  <option value="" disabled <%= !d.producto_id?'selected':'' %> >Seleccione...</option>
+                  <% products.forEach(prod=>{ %>
+                    <option value="<%= prod.id %>" <%= d.producto_id===prod.id?'selected':'' %>><%= prod.nombre %></option>
+                  <% }) %>
+                </select>
+              </td>
+              <td><input type="number" step="0.01" min="0" name="items[<%= i %>][cantidad]" class="form-control cantidad" value="<%= d.cantidad||'' %>" required></td>
+              <td><input type="number" step="0.01" min="0" name="items[<%= i %>][precio_unitario]" class="form-control precio" value="<%= d.precio_unitario||'' %>" required></td>
+              <td class="text-end subtotal">Q 0.00</td>
+              <td><button type="button" class="btn btn-sm btn-outline-danger btnDel"><i class="fa fa-times"></i></button></td>
+            </tr>
+          <% }) %>
+        </tbody>
+        <tfoot>
+          <tr>
+            <th colspan="3" class="text-end">Total</th>
+            <th class="text-end" id="totalCell">Q 0.00</th>
+            <th></th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary"><i class="fa fa-save"></i> Guardar</button>
+      <a class="btn btn-secondary" href="/compras-productos">Volver</a>
+    </div>
+  </form>
+</section>
+
+<script>
+(function(){
+  const tbody = document.querySelector('#tblDetalles tbody');
+  const btnAdd = document.getElementById('btnAdd');
+  const totalCell = document.getElementById('totalCell');
+
+  function renumerar(){
+    [...tbody.querySelectorAll('tr')].forEach((tr,idx)=>{
+      tr.querySelectorAll('select, input').forEach(el=>{
+        el.name = el.name.replace(/items\[\d+\]/, 'items['+idx+']');
+      });
+    });
+  }
+
+  function calc(){
+    let total = 0;
+    [...tbody.querySelectorAll('tr')].forEach(tr=>{
+      const cant = parseFloat(tr.querySelector('.cantidad').value||0);
+      const precio = parseFloat(tr.querySelector('.precio').value||0);
+      const sub = cant * precio;
+      tr.querySelector('.subtotal').textContent = 'Q ' + sub.toFixed(2);
+      total += sub;
+    });
+    totalCell.textContent = 'Q ' + total.toFixed(2);
+  }
+
+  tbody.addEventListener('input', e=>{ if(e.target.matches('.cantidad,.precio')) calc(); });
+
+  tbody.addEventListener('click', e=>{
+    if(e.target.closest('.btnDel')){
+      if(tbody.rows.length>1){ e.target.closest('tr').remove(); renumerar(); calc(); }
+    }
+  });
+
+  btnAdd.addEventListener('click', ()=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <select class="form-select producto" required>
+          <option value="" disabled selected>Seleccione...</option>
+          <% products.forEach(prod=>{ %>
+            <option value="<%= prod.id %>"><%= prod.nombre %></option>
+          <% }) %>
+        </select>
+      </td>
+      <td><input type="number" step="0.01" min="0" class="form-control cantidad" required></td>
+      <td><input type="number" step="0.01" min="0" class="form-control precio" required></td>
+      <td class="text-end subtotal">Q 0.00</td>
+      <td><button type="button" class="btn btn-sm btn-outline-danger btnDel"><i class="fa fa-times"></i></button></td>
+    `;
+    const idx = tbody.rows.length;
+    tr.querySelectorAll('select, input').forEach((el,i)=>{
+      const map = ['producto_id','cantidad','precio_unitario'];
+      if(i<3){ el.name = `items[${idx}][${map[i]}]`; }
+    });
+    tbody.appendChild(tr);
+  });
+
+  calc();
+})();
+</script>

@@ -1,0 +1,65 @@
+<%- include('../partials/header') %>
+
+<section class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="h4 mb-0">Compras</h2>
+    <a href="/compras/nueva" class="btn btn-success"><i class="fa fa-plus"></i> Nueva compra</a>
+  </div>
+
+  <!-- Filtros -->
+  <form class="row g-2 mb-3" method="get" action="/compras">
+    <div class="col-auto">
+      <label class="form-label mb-0">Mes</label>
+      <select name="mes" class="form-select">
+        <option value="">Todos</option>
+        <% for(let m=1;m<=12;m++){ %>
+          <option value="<%= m %>" <%= Number(query.mes)==m ? 'selected':'' %>><%= m %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="col-auto">
+      <label class="form-label mb-0">Año</label>
+      <input type="number" name="anio" class="form-control" value="<%= query.anio || '' %>" placeholder="2025">
+    </div>
+    <div class="col-auto align-self-end">
+      <button class="btn btn-primary"><i class="fa fa-filter"></i> Filtrar</button>
+      <a href="/compras" class="btn btn-outline-secondary">Limpiar</a>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Fecha</th>
+          <th>Proveedor</th>
+          <th class="text-end">Total</th>
+          <th>Creado por</th>
+          <th>Modificado por</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (compras.length===0){ %>
+          <tr><td colspan="7" class="text-center text-muted">Sin resultados</td></tr>
+        <% } %>
+        <% compras.forEach(c=>{ %>
+          <tr>
+            <td><%= c.id %></td>
+            <td><%= c.fecha_formateada %></td>
+            <td><%= c.proveedor_nombre %></td>
+            <td class="text-end">Q <%= Number(c.total).toFixed(2) %></td>
+            <td><%= c.creador_username || '-' %></td>
+            <td><%= c.modificador_username || '-' %></td>
+            <td>
+              <a class="btn btn-sm btn-outline-primary" href="/compras/<%= c.id %>"><i class="fa fa-eye"></i></a>
+              <a class="btn btn-sm btn-warning" href="/compras/<%= c.id %>/editar"><i class="fa fa-edit"></i></a>
+              <!-- Sin eliminar -->
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
